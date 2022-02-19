@@ -475,3 +475,12 @@ where 0xXXXXXXXX is the required firmware start address.
 
 The firmware release package already includes two prebuilt binaries for use with
 [STM32duino-bootloader](https://github.com/rogerclarkmelbourne/STM32duino-bootloader).
+
+### Using to automate SBC flashing
+This is really specific to Radxa's SBC and may not be useful in general.
+In my case I used a set of 2 relays to control the power supply on the pin PB 11 and to control the maskroom on PB 10.
+To compile the firmware for this purpose, run:
+```bash
+make WITH_SBC=1
+```
+And after you do that, you should only use the first serial port to talk to the SBC and the second one as a command line interface to control the maskroom and reboot pins.

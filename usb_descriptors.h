@@ -27,7 +27,9 @@ typedef enum {
     usb_string_index_serial,
     usb_string_index_uart_1_interface_name,
     usb_string_index_uart_2_interface_name,
+    #ifndef WITH_SBC
     usb_string_index_uart_3_interface_name,
+    #endif
     usb_string_index_last,
 } __attribute__ ((packed)) usb_string_index_t;
 
@@ -41,8 +43,10 @@ enum {
     usb_endpoint_address_cdc_0_data         = 0x02,
     usb_endpoint_address_cdc_1_interrupt    = 0x03,
     usb_endpoint_address_cdc_1_data         = 0x04,
+    #ifndef WITH_SBC
     usb_endpoint_address_cdc_2_interrupt    = 0x05,
     usb_endpoint_address_cdc_2_data         = 0x06,
+    #endif
     usb_endpoint_address_last
 };
 
@@ -53,7 +57,9 @@ extern const usb_endpoint_t usb_endpoints[usb_endpoint_address_last];
 enum {
     usb_interface_cdc_0 = 0x00,
     usb_interface_cdc_1 = 0x02,
+    #ifndef WITH_SBC
     usb_interface_cdc_2 = 0x04,
+    #endif
 };
 
 /* Device Descriptor */
@@ -84,6 +90,7 @@ typedef struct {
     usb_interface_descriptor_t          data_1;
     usb_endpoint_descriptor_t           data_eprx_1;
     usb_endpoint_descriptor_t           data_eptx_1;
+    #ifndef WITH_SBC
     usb_iad_descriptor_t                comm_iad_2;
     usb_interface_descriptor_t          comm_2;
     usb_cdc_header_desc_t               cdc_hdr_2;
@@ -94,6 +101,7 @@ typedef struct {
     usb_interface_descriptor_t          data_2;
     usb_endpoint_descriptor_t           data_eprx_2;
     usb_endpoint_descriptor_t           data_eptx_2;
+    #endif
 } __attribute__((packed)) usb_device_configuration_descriptor_t;
 
 extern const usb_device_configuration_descriptor_t usb_configuration_descriptor;

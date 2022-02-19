@@ -52,6 +52,7 @@ const usb_endpoint_t usb_endpoints[usb_endpoint_address_last] = {
         .tx_size    = USB_CDC_DATA_ENDPOINT_SIZE_LARGE,
         .event_handler = usb_cdc_data_endpoint_event_handler,
     },
+    #ifndef WITH_SBC
     /*  CDC 2 Interrupt Endpoint */
     { 
         .type       = usb_endpoint_type_interrupt,
@@ -66,6 +67,7 @@ const usb_endpoint_t usb_endpoints[usb_endpoint_address_last] = {
         .tx_size    = USB_CDC_DATA_ENDPOINT_SIZE_LARGE,
         .event_handler = usb_cdc_data_endpoint_event_handler,
     },
+    #endif
 };
 
 const usb_string_descriptor_t usb_string_lang                   = USB_ARRAY_DESC(usb_language_code_en_US);
@@ -74,7 +76,9 @@ const usb_string_descriptor_t usb_string_product                = USB_STRING_DES
 const usb_string_descriptor_t usb_string_serial                 = USB_STRING_DESC("NO SERIAL"); /* Placeholder, replaced by STM32 UID */
 const usb_string_descriptor_t usb_string_uart_1_interface_name  = USB_STRING_DESC("UART1");
 const usb_string_descriptor_t usb_string_uart_2_interface_name  = USB_STRING_DESC("UART2");
+#ifndef WITH_SBC
 const usb_string_descriptor_t usb_string_uart_3_interface_name  = USB_STRING_DESC("UART3");
+#endif
 
 const usb_string_descriptor_t *usb_string_descriptors[usb_string_index_last] = {
     &usb_string_lang,
@@ -83,7 +87,9 @@ const usb_string_descriptor_t *usb_string_descriptors[usb_string_index_last] = {
     &usb_string_serial,
     &usb_string_uart_1_interface_name,
     &usb_string_uart_2_interface_name,
+    #ifndef WITH_SBC
     &usb_string_uart_3_interface_name,
+    #endif
 };
 
 const usb_device_descriptor_t usb_device_descriptor = {
@@ -108,7 +114,11 @@ const usb_device_configuration_descriptor_t usb_configuration_descriptor = {
         .bLength                = sizeof(usb_configuration_descriptor.config),
         .bDescriptorType        = usb_descriptor_type_configuration,
         .wTotalLength           = sizeof(usb_configuration_descriptor),
+        #ifndef WITH_SBC
         .bNumInterfaces         = 6,
+        #else
+        .bNumInterfaces         = 4,
+        #endif
         .bConfigurationValue    = 1,
         .iConfiguration         = usb_string_index_none,
         .bmAttributes           = USB_CFG_ATTR_RESERVED,
@@ -278,6 +288,7 @@ const usb_device_configuration_descriptor_t usb_configuration_descriptor = {
         .wMaxPacketSize         = usb_endpoints[usb_endpoint_address_cdc_1_data].tx_size,
         .bInterval              = 0,
     },
+    #ifndef WITH_SBC
     .comm_iad_2 = {
         .bLength                = sizeof(usb_configuration_descriptor.comm_iad_2),
         .bDescriptorType        = usb_descriptor_type_interface_assoc,
@@ -360,5 +371,6 @@ const usb_device_configuration_descriptor_t usb_configuration_descriptor = {
         .wMaxPacketSize         = usb_endpoints[usb_endpoint_address_cdc_2_data].tx_size,
         .bInterval              = 0,
     },
+    #endif
 
 };

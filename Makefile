@@ -3,12 +3,16 @@ TARGET	= bluepill-serial-monster
 SRCS	= main.c system_clock.c system_interrupts.c status_led.c usb_core.c usb_descriptors.c\
 	usb_io.c usb_uid.c usb_panic.c usb_cdc.c cdc_shell.c gpio.c device_config.c
 
+ifneq ($(WITH_SBC),)
+SRCS += sbc.c
+endif
+
 # Toolchain & Utils
 CROSS_COMPILE	?= arm-none-eabi-
 CC		= $(CROSS_COMPILE)gcc
 OBJCOPY		= $(CROSS_COMPILE)objcopy
 SIZE		= $(CROSS_COMPILE)size
-STFLASH		= st-flash
+STFLASH		= sudo st-flash
 STUTIL		= st-util
 CPPCHECK	= cppcheck
 
@@ -23,10 +27,17 @@ STM32_INCLUDES	+= -I$(STM32CUBE)/Drivers/CMSIS/Core_A/Include
 STM32_INCLUDES	+= -I$(STM32CUBE)/Drivers/CMSIS/Device/ST/STM32F1xx/Include
 
 DEFINES		= -DSTM32F103xB -DHSE_VALUE=8000000U
+ifneq ($(WITH_SBC),)
+DEFINES		+= -DWITH_SBC
+endif
 CPUFLAGS	= -mthumb -mcpu=cortex-m3
 WARNINGS	= -Wall
-OPTIMIZATION	= -O3
+ifneq ($(WITH_DEBUG),)
+OPTIMIZATION	= -O0
 DEBUG		= -ggdb
+else
+OPTIMIZATION	= -O3
+endif
 
 CFLAGS		= $(DEFINES) $(STM32_INCLUDES) $(CPUFLAGS) $(WARNINGS) $(OPTIMIZATION) $(DEBUG) 
 LDFLAGS		= $(CPUFLAGS) -T$(STM32_LDSCRIPT) --specs=nosys.specs --specs=nano.specs

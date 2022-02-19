@@ -13,6 +13,10 @@
 
 typedef struct {
     uint32_t        magic;
+    #ifdef WITH_SBC
+    gpio_pin_t      charger_relay;
+    gpio_pin_t      maskroom_relay;
+    #endif
     gpio_pin_t      status_led_pin;
     gpio_pin_t      config_pin;
     cdc_config_t    cdc_config;

@@ -198,10 +198,15 @@ void usb_cdc_reconfigure();
 
 /* CDC Device Definitions */
 
+#ifdef WITH_SBC
+#define USB_CDC_NUM_PORTS                       2
+#define USB_CDC_CONFIG_PORT                     1
+#else
 #define USB_CDC_NUM_PORTS                       3
+#define USB_CDC_CONFIG_PORT                     0
+#endif
 #define USB_CDC_BUF_SIZE                        0x400
 #define USB_CDC_CRTL_LINES_POLLING_INTERVAL     20 /* ms */
-#define USB_CDC_CONFIG_PORT                     0
 
 /* CDC Polling */
 

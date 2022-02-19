@@ -17,6 +17,10 @@
 #define DEVICE_CONFIG_MAGIC         0xDECFDECFUL
 
 static const device_config_t default_device_config = {
+    #ifdef WITH_SBC
+    .charger_relay = { .port = GPIOB, .pin  = 11, .dir = gpio_dir_output, .speed = gpio_speed_low, .output = gpio_output_od, .polarity = gpio_polarity_low, .func = gpio_func_general },
+    .maskroom_relay =  { .port = GPIOB, .pin  = 10, .dir = gpio_dir_output, .speed = gpio_speed_low, .output = gpio_output_od, .polarity = gpio_polarity_low, .func = gpio_func_general },
+    #endif
     .status_led_pin = { .port = GPIOC, .pin = 13, .dir = gpio_dir_output, .speed = gpio_speed_low, .func = gpio_func_general, .output = gpio_output_od, .polarity = gpio_polarity_low },
     .config_pin = { .port = GPIOB, .pin = 5, .dir = gpio_dir_input, .pull = gpio_pull_up, .polarity = gpio_polarity_low },
     .cdc_config = {
@@ -51,6 +55,7 @@ static const device_config_t default_device_config = {
                     /* txa */ { .port = GPIOB, .pin =  1, .dir = gpio_dir_output, .speed = gpio_speed_medium, .func = gpio_func_general, .output = gpio_output_pp, .polarity = gpio_polarity_high  },
                 }
             },
+            #ifndef WITH_SBC
             /*  Port 2 */
             {
                 .pins = 
@@ -66,6 +71,7 @@ static const device_config_t default_device_config = {
                     /* txa */ { .port = GPIOA, .pin =  7, .dir = gpio_dir_output, .speed = gpio_speed_medium, .func = gpio_func_general, .output = gpio_output_pp, .polarity = gpio_polarity_high  },
                 }
             },
+            #endif
         }
     }
 };

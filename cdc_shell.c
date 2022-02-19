@@ -4,16 +4,18 @@
  * Copyright (c) 2020 Kirill Kotyagin
  */
 
-#include <string.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include "usb_cdc.h"
-#include "gpio.h"
+#include "cdc_shell.h"
 #include "cdc_config.h"
 #include "device_config.h"
+#include "gpio.h"
+#ifdef WITH_SBC
+#include "sbc.h"
+#endif
+#include "usb_cdc.h"
 #include "version.h"
-#include "cdc_shell.h"
-
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
 
 static const char cdc_shell_banner[]                = "\r\n\r\n"
                                                       "*******************************\r\n"
@@ -359,44 +361,72 @@ static void cdc_shell_cmd_version(int argc, char *argv[]) {
 
 static void cdc_shell_cmd_help(int argc, char *argv[]);
 
+#ifdef WITH_SBC
+static void cdc_shell_cmd_reboot(int argc, char *argv[]) {
+    cdc_shell_write_string("Rebooting...");
+    cdc_shell_write_string(cdc_shell_new_line);
+
+    sbc_set_reboot();
+}
+
+static void cdc_shell_cmd_reboot_maskroom(int argc, char *argv[]) {
+    cdc_shell_write_string("Rebooting into maskroom...");
+    cdc_shell_write_string(cdc_shell_new_line);
+
+    sbc_set_reboot();
+    sbc_set_maskroom_mode();
+}
+#endif
+
 static const cdc_shell_cmd_t cdc_shell_commands[] = {
-    { 
-        .cmd            = "help",
-        .handler        = cdc_shell_cmd_help,
-        .description    = "shows this help message, use \"help command-name\" to get command-specific help",
-        .usage          = "Usage: help [command-name]",
+    {
+        .cmd         = "help",
+        .handler     = cdc_shell_cmd_help,
+        .description = "shows this help message, use \"help command-name\" to get command-specific help",
+        .usage       = "Usage: help [command-name]",
     },
     {
-        .cmd            = "config",
-        .handler        = cdc_shell_cmd_config,
-        .description    = "save and reset configuration paramters in the device flash memory",
-        .usage          = "Usage: config save|reset\r\n"
-                          "Use: \"config save\" to permanently save device configuration.\r\n"
-                          "Use: \"config reset\" to reset device configuration to default.",
-    },
-    { 
-        .cmd            = "uart",
-        .handler        = cdc_shell_cmd_uart,
-        .description    = "set and view UART parameters",
-        .usage          = "Usage: uart port-number|all show|signal-name-1 param-1 value-1 ... [param-n value-n] [signal-name-2 ...]\r\n"
-                          "Use \"uart port-number|all show\" to view current UART configuration.\r\n"
-                          "Use \"uart port-number|all signal-name-1 param-1 value-1 ... [param-n value-n] [signal-name-2 ...]\"\r\n"
-                          "to set UART parameters, where signal names are rx, tx, rts, cts, dsr, dtr, dcd, ri, txa,\r\n"
-                          "and params are:\r\n"
-                          "  output\t[pp|od]\r\n"
-                          "  active\t[low|high]\r\n"
-                          "  pull\t\t[floating|up|down]\r\n"
-                          "Example: \"uart 1 tx output od\" sets UART1 TX output type to open-drain\r\n"
-                          "Example: \"uart 3 rts active high dcd active high pull down\" allows to set multiple parameters at once.",
+        .cmd         = "config",
+        .handler     = cdc_shell_cmd_config,
+        .description = "save and reset configuration paramters in the device flash memory",
+        .usage       = "Usage: config save|reset\r\n"
+                       "Use: \"config save\" to permanently save device configuration.\r\n"
+                       "Use: \"config reset\" to reset device configuration to default.",
     },
     {
-        .cmd            = "version",
-        .handler        = cdc_shell_cmd_version,
-        .description    = "print firmware version",
-        .usage          = "Usage: version",
+        .cmd         = "uart",
+        .handler     = cdc_shell_cmd_uart,
+        .description = "set and view UART parameters",
+        .usage       = "Usage: uart port-number|all show|signal-name-1 param-1 value-1 ... [param-n value-n] [signal-name-2 ...]\r\n"
+                       "Use \"uart port-number|all show\" to view current UART configuration.\r\n"
+                       "Use \"uart port-number|all signal-name-1 param-1 value-1 ... [param-n value-n] [signal-name-2 ...]\"\r\n"
+                       "to set UART parameters, where signal names are rx, tx, rts, cts, dsr, dtr, dcd, ri, txa,\r\n"
+                       "and params are:\r\n"
+                       "  output\t[pp|od]\r\n"
+                       "  active\t[low|high]\r\n"
+                       "  pull\t\t[floating|up|down]\r\n"
+                       "Example: \"uart 1 tx output od\" sets UART1 TX output type to open-drain\r\n"
+                       "Example: \"uart 3 rts active high dcd active high pull down\" allows to set multiple parameters at once.",
     },
-    { 0 }
-};
+    {
+        .cmd         = "version",
+        .handler     = cdc_shell_cmd_version,
+        .description = "print firmware version",
+        .usage       = "Usage: version",
+    },
+    #ifdef WITH_SBC
+    {
+        .cmd         = "reboot",
+        .handler     = cdc_shell_cmd_reboot,
+        .description = "reboot the attached sbc without maskroom",
+    },
+    {
+        .cmd         = "reboot-maskroom",
+        .handler     = cdc_shell_cmd_reboot_maskroom,
+        .description = "reboot the attached sbc with maskroom enabled",
+    },
+    #endif
+    {0}};
 
 /* Global Commands */
 

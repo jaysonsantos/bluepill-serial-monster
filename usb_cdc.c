@@ -55,7 +55,10 @@ static usb_cdc_state_t usb_cdc_states[USB_CDC_NUM_PORTS];
 /* Helper Functions */
 
 static USART_TypeDef* const usb_cdc_port_usarts[] = {
-    USART1, USART2, USART3
+    USART1, USART2, 
+    #ifndef WITH_SBC
+    USART3 
+    #endif
 };
 
 static USART_TypeDef* usb_cdc_get_port_usart(int port) {
@@ -75,7 +78,9 @@ static DMA_Channel_TypeDef* usb_cdc_get_port_dma_channel(int port, usb_cdc_port_
     static DMA_Channel_TypeDef* const port_dma_channels[][usb_cdc_port_direction_last] = {
         { DMA1_Channel5,  DMA1_Channel4 },
         { DMA1_Channel6,  DMA1_Channel7 },
+        #ifndef WITH_SBC
         { DMA1_Channel3,  DMA1_Channel2 },
+        #endif
     };
     if (port < (sizeof(port_dma_channels) / sizeof(*port_dma_channels)) && 
         port_dir < usb_cdc_port_direction_last) {
@@ -87,7 +92,9 @@ static DMA_Channel_TypeDef* usb_cdc_get_port_dma_channel(int port, usb_cdc_port_
 static uint8_t const usb_cdc_port_data_endpoints[] = {
     usb_endpoint_address_cdc_0_data,
     usb_endpoint_address_cdc_1_data,
+    #ifndef WITH_SBC
     usb_endpoint_address_cdc_2_data,
+    #endif
 };
 
 static uint8_t usb_cdc_get_port_data_ep(int port) {
@@ -109,7 +116,9 @@ static int usb_cdc_data_endpoint_port(uint8_t ep_num) {
 static uint8_t const usb_cdc_port_interrupt_endpoints[] = {
     usb_endpoint_address_cdc_0_interrupt,
     usb_endpoint_address_cdc_1_interrupt,
+    #ifndef WITH_SBC
     usb_endpoint_address_cdc_2_interrupt,
+    #endif
 };
 
 static uint8_t usb_cdc_get_port_notification_ep(int port) {
@@ -120,7 +129,10 @@ static uint8_t usb_cdc_get_port_notification_ep(int port) {
 }
 
 static uint8_t const usb_cdc_port_interfaces[] = {
-    usb_interface_cdc_0, usb_interface_cdc_1, usb_interface_cdc_2
+    usb_interface_cdc_0, usb_interface_cdc_1,
+    #ifndef WITH_SBC
+    usb_interface_cdc_2
+    #endif
 };
 
 static int usb_cdc_get_port_interface(int port) {
@@ -492,12 +504,14 @@ void DMA1_Channel7_IRQHandler() {
     usb_cdc_port_tx_complete(1);
 }
 
+#ifndef WITH_SBC
 void DMA1_Channel2_IRQHandler() {
     (void)DMA1_Channel2_IRQHandler;
     uint32_t status = DMA1->ISR & ( DMA_ISR_TCIF2 );
     DMA1->IFCR = status;
     usb_cdc_port_tx_complete(2);
 }
+#endif
 
 /* USART Interrupt Handlers */
 
@@ -528,10 +542,12 @@ void USART2_IRQHandler() {
     usb_cdc_usart_irq_handler(1, usb_cdc_port_usarts[1], usb_cdc_states[1].txa_bitband_clear);
 }
 
+#ifndef WITH_SBC
 void USART3_IRQHandler() {
     (void)USART3_IRQHandler;
     usb_cdc_usart_irq_handler(2, usb_cdc_port_usarts[2], usb_cdc_states[2].txa_bitband_clear);
 }
+#endif
 
 /* Port Configuration & Control Lines Functions */
 
@@ -622,8 +638,10 @@ void usb_cdc_reset() {
     NVIC_EnableIRQ(USART1_IRQn);
     NVIC_SetPriority(USART2_IRQn, SYSTEM_INTERRUTPS_PRIORITY_CRITICAL);
     NVIC_EnableIRQ(USART2_IRQn);
+    #ifndef WITH_SBC
     NVIC_SetPriority(USART3_IRQn, SYSTEM_INTERRUTPS_PRIORITY_CRITICAL);
     NVIC_EnableIRQ(USART3_IRQn);
+    #endif
 }
 
 void usb_cdc_enable() {
@@ -645,7 +663,9 @@ void usb_cdc_suspend() {
 
 void usb_cdc_frame() {
     if (usb_cdc_enabled) {
+        #ifndef WITH_SBC
         const device_config_t *device_config = device_config_get();
+        #endif
         static unsigned int ctrl_lines_polling_timer = 0;
         if (ctrl_lines_polling_timer == 0) {
             ctrl_lines_polling_timer = USB_CDC_CRTL_LINES_POLLING_INTERVAL;
@@ -667,6 +687,7 @@ void usb_cdc_frame() {
                     new_state |= control_lines_state;
                 } while (!(__sync_bool_compare_and_swap(&usb_cdc_states[port].serial_state, _state, new_state)));
             }
+            #ifndef WITH_SBC
             if (gpio_pin_get(&device_config->config_pin) != usb_cdc_config_mode) {
                 if (usb_cdc_config_mode) {
                     usb_cdc_config_mode_leave();
@@ -674,6 +695,10 @@ void usb_cdc_frame() {
                     usb_cdc_config_mode_enter();
                 }
             }
+            #else
+            if (!usb_cdc_config_mode)
+                usb_cdc_config_mode_enter();
+            #endif
         } else {
             ctrl_lines_polling_timer = ctrl_lines_polling_timer - 1;
         }
